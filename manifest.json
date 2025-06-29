@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Doom Scroll",
+  "version": "1.0.0",
+  "author": "Mayank Singhal",
+  "homepage_url": "https://doomscroll.zenzy.io",
+  "description": "Block feeds and suggested content on social media platforms",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "*://*.linkedin.com/*",
+    "*://*.facebook.com/*",
+    "*://*.instagram.com/*",
+    "*://*.x.com/*",
+    "*://*.reddit.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.linkedin.com/*",
+        "*://*.facebook.com/*",
+        "*://*.instagram.com/*",
+        "*://*.x.com/*",
+        "*://*.reddit.com/*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
