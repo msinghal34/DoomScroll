@@ -55,28 +55,43 @@ function initializeBlocking() {
             el.removeAttribute('data-doomscroll-original-display');
         });
 
-        // Apply blocking based on settings
-        updateBlocking();
+        // Check if we should apply blocking for the current site
+        const hostname = window.location.hostname;
+        const shouldBlock = (hostname.includes('youtube.com') && settings.youtube) ||
+                          (hostname.includes('linkedin.com') && settings.linkedin) ||
+                          (hostname.includes('facebook.com') && settings.facebook) ||
+                          (hostname.includes('x.com') && settings.twitter) ||
+                          (hostname.includes('reddit.com') && settings.reddit) ||
+                          (hostname.includes('instagram.com') && settings.instagram);
 
-        // Set up mutation observer for dynamic content
-        if (!observer) {
-            observer = new MutationObserver(function(mutations) {
-                // Only trigger if we're not already updating
-                if (!window.doomscrollUpdating) {
-                    window.doomscrollUpdating = true;
-                    updateBlocking();
-                    // Small debounce to prevent excessive updates
-                    setTimeout(() => { window.doomscrollUpdating = false; }, 100);
-                }
-            });
+        if (shouldBlock) {
+            // Apply blocking based on settings
+            updateBlocking();
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: false,
-                characterData: false
-            });
-            console.log('DoomScroll: MutationObserver started');
+            // Set up mutation observer for dynamic content
+            if (!observer) {
+                observer = new MutationObserver(function(mutations) {
+                    // Only trigger if we're not already updating
+                    if (!window.doomscrollUpdating) {
+                        window.doomscrollUpdating = true;
+                        updateBlocking();
+                        // Small debounce to prevent excessive updates
+                        setTimeout(() => { window.doomscrollUpdating = false; }, 100);
+                    }
+                });
+
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: false,
+                    characterData: false
+                });
+                console.log('DoomScroll: MutationObserver started');
+            }
+        } else if (observer) {
+            // If we shouldn't block but have an observer, clean it up
+            observer.disconnect();
+            observer = null;
         }
     });
 }
@@ -105,8 +120,13 @@ function updateBlocking() {
         el.removeAttribute('data-doomscroll-original-display');
     });
 
-    // If all blocking is disabled, we're done
-    if (!Object.values(settings).some(v => v === true)) {
+    // Only proceed with blocking if it's enabled for this specific site
+    if ((hostname.includes('youtube.com') && !settings.youtube) ||
+        (hostname.includes('linkedin.com') && !settings.linkedin) ||
+        (hostname.includes('facebook.com') && !settings.facebook) ||
+        (hostname.includes('x.com') && !settings.twitter) ||
+        (hostname.includes('reddit.com') && !settings.reddit) ||
+        (hostname.includes('instagram.com') && !settings.instagram)) {
         return;
     }
 
@@ -242,11 +262,3 @@ function blockElementsBySelectors(selectors) {
         });
     }
 }
-
-// Function to block elements (used by MutationObserver)
-function blockElements() {
-    updateBlocking();
-}
-
-// Initial call to block existing elements
-updateBlocking();
