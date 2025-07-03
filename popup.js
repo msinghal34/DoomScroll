@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggles = {
         youtube: document.getElementById('youtubeToggle'),
         linkedin: document.getElementById('linkedinToggle'),
-        facebook: document.getElementById('facebookToggle'),
         twitter: document.getElementById('twitterToggle'),
         reddit: document.getElementById('redditToggle'),
+        facebook: document.getElementById('facebookToggle'),
         instagram: document.getElementById('instagramToggle')
     };
 
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const defaultSettings = {
         youtube: true,
         linkedin: true,
-        facebook: true,
         twitter: true,
         reddit: true,
+        facebook: true,
         instagram: true
     };
 
@@ -54,9 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         const siteDomains = {
                             'youtube': 'youtube.com',
                             'linkedin': 'linkedin.com',
-                            'facebook': 'facebook.com',
                             'twitter': 'x.com',
                             'reddit': 'reddit.com',
+                            'facebook': 'facebook.com',
                             'instagram': 'instagram.com'
                         };
 

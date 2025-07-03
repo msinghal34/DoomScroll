@@ -1,10 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Doom Scroll",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Mayank Singhal",
-  "homepage_url": "https://doomscroll.zenzy.io",
-  "description": "Block feeds and suggested content on social media platforms",
+  "homepage_url": "https://doomscroll.web.app",
+  "description": "Block distracting feeds and suggested content on social media platforms",
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
   "permissions": [
     "activeTab",
     "storage"

@@ -1,17 +1,32 @@
-<div align="center">
+<p align="center">
   <img src="images/icon128.png" alt="Doom Scroll Icon" width="128">
   <h1>Doom Scroll Chrome Extension</h1>
-</div>
+</p>
 
-Doom Scroll is a Chrome extension that helps you stay focused by blocking feeds and suggested content on social media platforms. It's perfect for users who want to complete specific tasks without getting distracted by endless scrolling.
+<p align="center" style="display: flex; justify-content: center; gap: 10px;">
+  <a href="https://chrome.google.com/webstore/detail/doom-scroll/gffafphegpmjmopcfgjffibcjcnipnbl" style="text-decoration: none; border: none;">
+    <img src="https://img.shields.io/chrome-web-store/v/gffafphegpmjmopcfgjffibcjcnipnbl?label=Chrome%20Web%20Store" alt="Chrome Web Store">
+  </a>
+  <a href="https://doomscroll.web.app" style="text-decoration: none; border: none;">
+    <img src="https://img.shields.io/website?url=https%3A%2F%2Fdoomscroll.web.app" alt="Website">
+  </a>
+</p>
+
+## Links
+
+- [Chrome Web Store](https://chrome.google.com/webstore/detail/doom-scroll/gffafphegpmjmopcfgjffibcjcnipnbl)
+- [Website](https://doomscroll.web.app)
+
+
+Doom Scroll is a Chrome extension that helps you stay focused by blocking distracting feeds and suggested content on social media platforms. It's perfect for users who want to complete specific tasks without getting distracted by endless scrolling.
 
 ## Supported Platforms
 - YouTube
 - LinkedIn
-- Facebook
-- Instagram
 - Twitter
 - Reddit
+- Facebook
+- Instagram
 
 ## Installation
 
