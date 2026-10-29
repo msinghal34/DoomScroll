@@ -20,13 +20,19 @@
 
 Doom Scroll is a Chrome extension that helps you stay focused by blocking distracting feeds and suggested content on social media platforms. It's perfect for users who want to complete specific tasks without getting distracted by endless scrolling.
 
-## Supported Platforms
-- YouTube
-- LinkedIn
-- Twitter
-- Reddit
-- Facebook
-- Instagram
+## What it hides, and what it keeps
+
+Doom Scroll hides what a site pushes at you: suggested and recommended posts, trends and news.
+What you go looking for stays: posts from people you follow, profiles, search, messages, Reels or Shorts you open on purpose, and any link to a single post or video.
+
+| Site | Hidden | Kept |
+| --- | --- | --- |
+| YouTube | Home feed, suggestions beside and after a video, news and Shorts shelves in search, the menu's Explore section | Subscriptions, channels and their Shorts, search results, the Shorts tab |
+| Instagram | The suggested home feed and "Suggested for you" | Stories, a link to the Following feed, Explore, Reels, messages |
+| Facebook | The suggested home feed | Composer, Stories, a link to Feeds (friends, groups and pages you follow), Reels, Messenger |
+| X | The "For you" timeline until you press "Show feed", trends, news, follow suggestions | Posting, the Following tab, profiles, search, Chat |
+| LinkedIn | The feed until you press "Show feed", LinkedIn News and puzzles | Start a post, profile, Messaging |
+| Reddit | Home and popular feeds, the news banner, related posts and "People also ask" beside a post | Subreddits and their posts, community information |
 
 ## Installation
 
@@ -38,15 +44,15 @@ Doom Scroll is a Chrome extension that helps you stay focused by blocking distra
 ## Usage
 
 1. Click on the Doom Scroll extension icon in your browser toolbar
-2. Toggle the switch to turn blocking on or off
-3. When enabled, the extension will automatically block feeds and suggested content on supported platforms
-4. When disabled, all content will be visible as usual
+2. Toggle a site's switch to turn blocking on or off for that site
+3. When enabled, the extension hides feeds and suggested content on that site
+4. When disabled, the site shows as usual
 
 ## Features
 - Toggle blocking with a single click
 - Works across all supported social media platforms
 - Persistent settings (remembers your preference)
-- Real-time updates when you switch between websites
+- Toggles apply to open tabs straight away, with no reload
 
 ## Contributing
 
