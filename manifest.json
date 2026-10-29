@@ -14,12 +14,13 @@
     "storage"
   ],
   "host_permissions": [
-    "*://*.youtube.com/*",
-    "*://*.linkedin.com/*",
-    "*://*.facebook.com/*",
-    "*://*.instagram.com/*",
-    "*://*.x.com/*",
-    "*://*.reddit.com/*"
+    "*://www.youtube.com/*",
+    "*://www.linkedin.com/*",
+    "*://www.facebook.com/*",
+    "*://web.facebook.com/*",
+    "*://www.instagram.com/*",
+    "*://x.com/*",
+    "*://www.reddit.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -33,12 +34,13 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.youtube.com/*",
-        "*://*.linkedin.com/*",
-        "*://*.facebook.com/*",
-        "*://*.instagram.com/*",
-        "*://*.x.com/*",
-        "*://*.reddit.com/*"
+        "*://www.youtube.com/*",
+        "*://www.linkedin.com/*",
+        "*://www.facebook.com/*",
+        "*://web.facebook.com/*",
+        "*://www.instagram.com/*",
+        "*://x.com/*",
+        "*://www.reddit.com/*"
       ],
       "css": ["content.css"],
       "js": ["content.js"],

@@ -7,7 +7,8 @@
  * stylesheet which site it is on, whether blocking is on for it, and which page
  * of the single-page app is showing, and does what CSS cannot: it links each site's
  * own feed of what you follow, or a "Show feed" button, in place of the hidden one, and pauses
- * videos it has hidden.
+ * videos it has hidden. manifest.json runs it only on the hosts these rules are written for, so
+ * the sites' other apps, such as YouTube Music, are left alone.
  */
 
 const SITES = {
@@ -129,10 +130,19 @@ function scheduleRunHome() {
     }
 }
 
-// CSS hides a feed but not its sound: its videos keep autoplaying, so pause any video out of sight
+// CSS hides a feed but not its sound: its videos keep autoplaying, so pause a video that content.css
+// put out of sight. Only one it hid: sites play audio through a video the site itself keeps hidden,
+// so a video counts as ours only if it shows again with the rules lifted. Lifting them and putting
+// them back in one task restyles without painting, so nothing flashes.
 function pauseIfHidden(video) {
-    if (root.hasAttribute('data-doomscroll') && !video.paused &&
-        !video.checkVisibility({ visibilityProperty: true })) {
+    const blocked = root.getAttribute('data-doomscroll');
+    if (!blocked || video.paused || video.checkVisibility({ visibilityProperty: true })) {
+        return;
+    }
+    root.removeAttribute('data-doomscroll');
+    const hiddenBySite = !video.checkVisibility({ visibilityProperty: true });
+    root.setAttribute('data-doomscroll', blocked);
+    if (!hiddenBySite) {
         video.pause();
     }
 }
