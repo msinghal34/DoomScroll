@@ -11,7 +11,6 @@
     "128": "images/icon128.png"
   },
   "permissions": [
-    "activeTab",
     "storage"
   ],
   "host_permissions": [
@@ -41,7 +40,9 @@
         "*://*.x.com/*",
         "*://*.reddit.com/*"
       ],
-      "js": ["content.js"]
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_start"
     }
   ]
 }

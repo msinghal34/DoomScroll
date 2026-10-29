@@ -3,262 +3,186 @@
  *
  * Copyright (C) 2025 Mayank Singhal
  *
+ * The hiding itself is declarative, in content.css. This script tells that
+ * stylesheet which site it is on, whether blocking is on for it, and which page
+ * of the single-page app is showing, and does what CSS cannot: it links each site's
+ * own feed of what you follow, or a "Show feed" button, in place of the hidden one, and pauses
+ * videos it has hidden.
  */
 
-// Listen for messages from popup
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'toggle') {
-        isEnabled = request.enabled;
-        updateBlocking();
-    }
-});
-
-// Listen for settings updates
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'updateSettings') {
-        console.log('DoomScroll: Received settings update', request.settings);
-        settings = { ...settings, ...request.settings };
-        console.log('DoomScroll: Updated settings', settings);
-        updateBlocking();
-    }
-    return true; // Keep the message channel open for async response if needed
-});
-
-// Default settings
-let settings = {
-    youtube: true,
-    linkedin: true,
-    facebook: true,
-    twitter: true,
-    reddit: true,
-    instagram: true
+const SITES = {
+    youtube: 'youtube.com',
+    linkedin: 'linkedin.com',
+    facebook: 'facebook.com',
+    twitter: 'x.com',
+    reddit: 'reddit.com',
+    instagram: 'instagram.com'
 };
 
-let isEnabled = false;
-let observer = null;
+const hostname = window.location.hostname;
+const site = Object.keys(SITES).find(key =>
+    hostname === SITES[key] || hostname.endsWith('.' + SITES[key]));
+const root = document.documentElement;
 
-// Add debug logging
-console.log('DoomScroll: Content script loaded');
+// content.css hides the suggested home feed; this is the link to the site's own feed of what you
+// follow that each site puts in its place
+function feedLink(href, title, detail) {
+    const link = document.createElement('a');
+    link.id = 'doomscroll-feed-link';
+    link.href = href;
+    link.textContent = title;
+    const line = document.createElement('span');
+    line.textContent = detail;
+    link.append(line);
+    return link;
+}
 
-// Function to handle initial setup
-function initializeBlocking() {
-    // Load settings and apply blocking
-    chrome.storage.sync.get(settings, function(result) {
-        console.log('DoomScroll: Loaded settings from storage', result);
-        settings = { ...settings, ...result };
-        console.log('DoomScroll: Current settings after load', settings);
+// Where a site has no feed of only what you follow, a button that shows the normal one, for this
+// visit to the page
+function showFeedButton() {
+    const button = feedLink('#', 'Show feed',
+        'Doom Scroll keeps the feed out of sight until you ask for it.');
+    button.setAttribute('role', 'button');
+    button.addEventListener('click', event => {
+        event.preventDefault();
+        root.setAttribute('data-doomscroll-reveal', '');
+    });
+    return button;
+}
 
-        // Clear any previous blocking
-        document.querySelectorAll('[data-doomscroll-blocked]').forEach(el => {
-            el.style.display = '';
-            el.removeAttribute('data-doomscroll-blocked');
-            el.removeAttribute('data-doomscroll-original-display');
-        });
+// The block holding the Stories tray whose sibling holds the feed, found by climbing from the tray
+// but never out of the main column: while the page loads, a post can sit elsewhere, and climbing
+// past the column put the link at the bottom of the page. Not found yet, the next change retries.
+function blockBeside(tray, feedSelector) {
+    const column = tray.closest('main, [role="main"]');
+    let block = tray;
+    const isFeed = sibling => sibling !== block && sibling.querySelector(feedSelector);
+    while (block.parentElement && block.parentElement !== column &&
+        ![...block.parentElement.children].some(isFeed)) {
+        block = block.parentElement;
+    }
+    return block.parentElement && block.parentElement !== column ? block : null;
+}
 
-        // Check if we should apply blocking for the current site
-        const hostname = window.location.hostname;
-        const shouldBlock = (hostname.includes('youtube.com') && settings.youtube) ||
-                          (hostname.includes('linkedin.com') && settings.linkedin) ||
-                          (hostname.includes('facebook.com') && settings.facebook) ||
-                          (hostname.includes('x.com') && settings.twitter) ||
-                          (hostname.includes('reddit.com') && settings.reddit) ||
-                          (hostname.includes('instagram.com') && settings.instagram);
-
-        if (shouldBlock) {
-            // Apply blocking based on settings
-            updateBlocking();
-
-            // Set up mutation observer for dynamic content
-            if (!observer) {
-                observer = new MutationObserver(function(mutations) {
-                    // Only trigger if we're not already updating
-                    if (!window.doomscrollUpdating) {
-                        window.doomscrollUpdating = true;
-                        updateBlocking();
-                        // Small debounce to prevent excessive updates
-                        setTimeout(() => { window.doomscrollUpdating = false; }, 100);
-                    }
-                });
-
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                    attributes: false,
-                    characterData: false
-                });
-                console.log('DoomScroll: MutationObserver started');
+// Home pages that need more than CSS, run whenever the page changes while it is on its home path
+const HOME = {
+    instagram: {
+        path: '/',
+        run: () => {
+            const tray = document.querySelector('main [data-pagelet="story_tray"]');
+            const block = tray && blockBeside(tray, 'article');
+            if (block) {
+                block.after(feedLink('/?variant=following', 'Open Following',
+                    'Posts from accounts you follow, newest first. Doom Scroll hides the suggested feed.'));
             }
-        } else if (observer) {
-            // If we shouldn't block but have an observer, clean it up
-            observer.disconnect();
-            observer = null;
         }
-    });
-}
-
-// Start initialization when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeBlocking);
-} else {
-    initializeBlocking();
-}
-
-function updateBlocking() {
-    const hostname = window.location.hostname;
-    console.log('DoomScroll: Updating blocking for', hostname, 'with settings', settings);
-
-    // First, unblock everything that was previously blocked
-    document.body.style.overflow = 'auto';
-    document.querySelectorAll('[data-doomscroll-blocked]').forEach(el => {
-        const originalDisplay = el.getAttribute('data-doomscroll-original-display');
-        if (originalDisplay) {
-            el.style.display = originalDisplay === 'none' ? '' : originalDisplay;
-        } else {
-            el.style.display = '';
-        }
-        el.removeAttribute('data-doomscroll-blocked');
-        el.removeAttribute('data-doomscroll-original-display');
-    });
-
-    // Only proceed with blocking if it's enabled for this specific site
-    if ((hostname.includes('youtube.com') && !settings.youtube) ||
-        (hostname.includes('linkedin.com') && !settings.linkedin) ||
-        (hostname.includes('facebook.com') && !settings.facebook) ||
-        (hostname.includes('x.com') && !settings.twitter) ||
-        (hostname.includes('reddit.com') && !settings.reddit) ||
-        (hostname.includes('instagram.com') && !settings.instagram)) {
-        return;
-    }
-
-    // Then apply blocking only if the setting is enabled
-    if (hostname.includes('youtube.com')) {
-        console.log('DoomScroll: Checking YouTube - settings.youtube =', settings.youtube);
-        if (settings.youtube) {
-            console.log('DoomScroll: Blocking YouTube content');
-            const elementsToBlock = [
-                'ytd-rich-grid-renderer', // Main feed
-                'ytd-rich-item-renderer', // Individual video cards
-                'ytd-watch-next-secondary-results-renderer', // Suggested videos
-                '#related' // Related videos
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: YouTube content should be visible');
-        }
-    }
-
-    // LinkedIn
-    if (hostname.includes('linkedin.com')) {
-        console.log('DoomScroll: Checking LinkedIn - settings.linkedin =', settings.linkedin);
-        if (settings.linkedin) {
-            console.log('DoomScroll: Blocking LinkedIn content');
-            const elementsToBlock = [
-                '[aria-label="Main Feed"]', // Main feed
-                '[aria-label="LinkedIn News"]' // Right Sidebar - News, Games and suggested profiles
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: LinkedIn content should be visible');
-        }
-    }
-
-    // Facebook
-    if (hostname.includes('facebook.com')) {
-        console.log('DoomScroll: Checking Facebook - settings.facebook =', settings.facebook);
-        if (settings.facebook) {
-            console.log('DoomScroll: Blocking Facebook content');
-            const elementsToBlock = [
-                '[role="main"]' // Main content area
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: Facebook content should be visible');
-        }
-    }
-
-    // Twitter
-    if (hostname.includes('x.com')) {
-        console.log('DoomScroll: Checking Twitter - settings.twitter =', settings.twitter);
-        if (settings.twitter) {
-            console.log('DoomScroll: Blocking Twitter content');
-            const elementsToBlock = [
-                'div[aria-label="Timeline: Your Home Timeline"]', // Timeline
-                'div[aria-label="Trending"]' // Right Sidebar for Trending, Who to Follow
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: Twitter content should be visible');
-        }
-    }
-
-    // Reddit
-    if (hostname.includes('reddit.com')) {
-        console.log('DoomScroll: Checking Reddit - settings.reddit =', settings.reddit);
-        if (settings.reddit) {
-            console.log('DoomScroll: Blocking Reddit content');
-            const elementsToBlock = [
-                '.masthead', // Top News
-                '#right-sidebar-container', // Right sidebar
-                'shreddit-feed' // Main feed and reddits
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: Reddit content should be visible');
-        }
-    }
-
-    // Instagram
-    if (hostname.includes('instagram.com')) {
-        console.log('DoomScroll: Checking Instagram - settings.instagram =', settings.instagram);
-        if (settings.instagram) {
-            console.log('DoomScroll: Blocking Instagram content');
-            const elementsToBlock = [
-                'article' // Posts
-            ];
-            blockElementsBySelectors(elementsToBlock);
-        } else {
-            console.log('DoomScroll: Instagram content should be visible');
-        }
-    }
-}
-
-/**
- * Blocks elements matching the given CSS selectors
- * @param {string[]} selectors - Array of CSS selectors to block
- */
-function blockElementsBySelectors(selectors) {
-    // First, show all previously blocked elements
-    document.querySelectorAll('[data-doomscroll-blocked]').forEach(el => {
-        const originalDisplay = el.getAttribute('data-doomscroll-original-display');
-        if (originalDisplay === 'none' || originalDisplay === '') {
-            el.style.display = ''; // Reset to default
-        } else {
-            el.style.display = originalDisplay;
-        }
-        el.removeAttribute('data-doomscroll-blocked');
-        el.removeAttribute('data-doomscroll-original-display');
-    });
-
-    // Then apply new blocking if needed
-    if (selectors && selectors.length > 0) {
-        selectors.forEach(selector => {
-            try {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(element => {
-                    if (element && element.parentNode && !element.hasAttribute('data-doomscroll-blocked')) {
-                        // Store the original display value before hiding
-                        const originalDisplay = window.getComputedStyle(element).display;
-                        element.setAttribute('data-doomscroll-original-display', originalDisplay);
-
-                        // Hide the element
-                        element.style.display = 'none';
-                        element.setAttribute('data-doomscroll-blocked', 'true');
-                        console.log('DoomScroll: Blocked element with selector:', selector);
-                    }
-                });
-            } catch (error) {
-                console.error('Error blocking elements with selector:', selector, error);
+    },
+    facebook: {
+        path: '/',
+        run: () => {
+            const tray = document.querySelector('[role="main"] [data-focus-target="stories_tray"]');
+            const block = tray &&
+                blockBeside(tray, '[aria-posinset], [data-visualcompletion="loading-state"]');
+            if (block) {
+                block.after(feedLink('/?filter=all&sk=h_chr', 'Open Feeds',
+                    'Posts from friends, groups and pages you follow, newest first. ' +
+                    'Doom Scroll hides the suggested feed.'));
             }
-        });
+        }
+    },
+    // Below the composer, where the "For you" timeline was
+    twitter: {
+        path: '/home',
+        run: () => {
+            const timeline = document.querySelector('[data-testid="primaryColumn"] section[role="region"]');
+            if (timeline) {
+                timeline.before(showFeedButton());
+            }
+        }
+    },
+    // Right after "Start a post", the feed list's first child
+    linkedin: {
+        path: '/feed',
+        run: () => {
+            const composer = document.querySelector('[data-testid="mainFeed"] > :first-child');
+            if (composer) {
+                composer.after(showFeedButton());
+            }
+        }
     }
+};
+
+let homePending = false;
+
+function runHome() {
+    homePending = false;
+    if (root.getAttribute('data-doomscroll-path') === HOME[site].path &&
+        !document.getElementById('doomscroll-feed-link')) {
+        HOME[site].run();
+    }
+}
+
+function scheduleRunHome() {
+    if (!homePending) {
+        homePending = true;
+        requestAnimationFrame(runHome);
+    }
+}
+
+// CSS hides a feed but not its sound: its videos keep autoplaying, so pause any video out of sight
+function pauseIfHidden(video) {
+    if (root.hasAttribute('data-doomscroll') && !video.paused &&
+        !video.checkVisibility({ visibilityProperty: true })) {
+        video.pause();
+    }
+}
+
+function pauseHiddenVideos() {
+    document.querySelectorAll('video').forEach(pauseIfHidden);
+}
+
+function setBlocking(enabled) {
+    // Turning a site off and on again starts it over, with the feed hidden behind "Show feed"
+    root.removeAttribute('data-doomscroll-reveal');
+    if (enabled) {
+        root.setAttribute('data-doomscroll', site);
+        pauseHiddenVideos();
+    } else {
+        root.removeAttribute('data-doomscroll');
+    }
+}
+
+function updatePath() {
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    if (path !== root.getAttribute('data-doomscroll-path')) {
+        root.removeAttribute('data-doomscroll-reveal');
+    }
+    root.setAttribute('data-doomscroll-path', path);
+    pauseHiddenVideos();
+}
+
+if (site) {
+    // Every site defaults to blocked, so hide before storage answers rather than flash the feed
+    setBlocking(true);
+    updatePath();
+
+    chrome.storage.sync.get({ [site]: true }, result => setBlocking(result[site]));
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'sync' && site in changes) {
+            setBlocking(changes[site].newValue !== false);
+        }
+    });
+
+    // These sites route client-side, so follow history changes without a reload
+    window.navigation.addEventListener('currententrychange', updatePath);
+    if (site in HOME) {
+        // At document_start there is no body yet, so watch the whole document
+        new MutationObserver(scheduleRunHome).observe(root, { childList: true, subtree: true });
+    }
+    // Media events do not bubble, so catch play in the capture phase
+    document.addEventListener('play', event => {
+        if (event.target instanceof HTMLVideoElement) {
+            pauseIfHidden(event.target);
+        }
+    }, true);
 }

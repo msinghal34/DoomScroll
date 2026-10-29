@@ -1,0 +1,126 @@
+/*
+ * content.css - Feed blocking rules for DoomScroll
+ *
+ * Copyright (C) 2025 Mayank Singhal
+ *
+ * content.js sets these attributes on <html>:
+ *   data-doomscroll         the site key, present only while blocking is on for this site
+ *   data-doomscroll-path    location.pathname without a trailing slash ("/" for the root)
+ *   data-doomscroll-reveal  after "Show feed" is clicked, until the page changes
+ * Rules hide what a site pushes at you: suggestions, recommendations, trends and news. What you go
+ * looking for stays: profiles, search, Explore, messages, Reels or Shorts opened on purpose, and any
+ * link to a single post or video. In place of a hidden home feed content.js puts #doomscroll-feed-link:
+ * a link to the site's own feed of only what you follow, or a "Show feed" button where it has none.
+ */
+
+/* YouTube: home feed, watch page suggestions, end-of-video suggestion wall, and the shelves search
+   mixes into its results (news, Shorts, "People also watched") */
+html[data-doomscroll="youtube"] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+html[data-doomscroll="youtube"] ytd-search ytd-shelf-renderer,
+html[data-doomscroll="youtube"] ytd-search ytd-reel-shelf-renderer,
+html[data-doomscroll="youtube"] ytd-search grid-shelf-view-model,
+/* YouTube: the menu's Explore section (Music, Live, News, Sports...), found by its Live channel link */
+html[data-doomscroll="youtube"] ytd-guide-section-renderer:has(a[href="/channel/UC4R8DWoMoI7CAwX8_LjQHig"]),
+html[data-doomscroll="youtube"] ytd-watch-flexy #related,
+html[data-doomscroll="youtube"] .ytp-endscreen-content,
+html[data-doomscroll="youtube"] .ytp-fullscreen-grid,
+
+/* LinkedIn: home feed below the "Start a post" box, which is the feed list's first child, until
+   "Show feed"; and the right column after it (news, puzzles, suggestions) always. The aria-labels
+   are the old layout's */
+html[data-doomscroll="linkedin"][data-doomscroll-path="/feed"]:not([data-doomscroll-reveal]) [data-testid="mainFeed"] > :not(:first-child, #doomscroll-feed-link),
+html[data-doomscroll="linkedin"][data-doomscroll-path="/feed"] section:has([data-testid="mainFeed"]) ~ aside,
+html[data-doomscroll="linkedin"][data-doomscroll-path="/feed"] [aria-label="Main Feed"],
+html[data-doomscroll="linkedin"][data-doomscroll-path="/feed"] [aria-label="LinkedIn News"],
+
+/* Facebook: the home feed, which is mostly suggested posts, keeping the composer and Stories; the
+   link goes to Feeds. Suggested posts cannot be hidden one by one: Facebook keeps loading more to
+   fill the space. Feeds is also "/" but has no Stories tray, so this leaves it alone */
+html[data-doomscroll="facebook"][data-doomscroll-path="/"] [role="main"] div:has(> div [data-focus-target="stories_tray"]) > div:has([aria-posinset], [data-visualcompletion="loading-state"]):not(:has([data-focus-target="stories_tray"])),
+html:not([data-doomscroll]) #doomscroll-feed-link,
+html[data-doomscroll-reveal] #doomscroll-feed-link,
+
+/* Twitter: the home timeline and its "new posts" pill while "For you", the first tab, is selected,
+   until "Show feed"; Following, the accounts you follow, shows as it is */
+html[data-doomscroll="twitter"][data-doomscroll-path="/home"]:not([data-doomscroll-reveal]) [data-testid="primaryColumn"]:has([role="tablist"] [role="presentation"]:first-child [role="tab"][aria-selected="true"]) :is(section[role="region"], [role="status"]:has(> button)),
+html[data-doomscroll="twitter"] [data-testid="primaryColumn"]:not(:has([role="tablist"] [role="presentation"]:first-child [role="tab"][aria-selected="true"])) #doomscroll-feed-link,
+
+/* Twitter: Explore's tabs of trends and news, keeping its search box */
+html[data-doomscroll="twitter"][data-doomscroll-path^="/explore"] [data-testid="primaryColumn"] section[role="region"],
+html[data-doomscroll="twitter"][data-doomscroll-path^="/explore"] [data-testid="primaryColumn"] nav[role="navigation"],
+
+/* Twitter: sidebar news, trends, follow suggestions and Premium upsell on every page, each hidden
+   as the whole module in the stack that ends in the footer, along with the empty bordered
+   placeholder left above them; search and search filters stay */
+html[data-doomscroll="twitter"] [data-testid="sidebarColumn"] div:has(> div > nav[role="navigation"]) > div:has([data-testid="news_sidebar"], [data-testid="trend"], [data-testid="UserCell"], a[href="/i/premium_sign_up"]),
+html[data-doomscroll="twitter"] [data-testid="sidebarColumn"] div:has(> div > nav[role="navigation"]) > div:empty,
+html[data-doomscroll="twitter"] [data-testid="sidebarColumn"] [data-testid="news_sidebar"],
+html[data-doomscroll="twitter"] [data-testid="sidebarColumn"] section:has([data-testid="trend"]),
+html[data-doomscroll="twitter"] [data-testid="sidebarColumn"] aside:has([data-testid="UserCell"]),
+
+/* Twitter: "Who to follow" inside timelines such as profiles, but not in follower lists or search
+   results, where accounts are what was asked for */
+html[data-doomscroll="twitter"]:not([data-doomscroll-path*="follow"]):not([data-doomscroll-path^="/search"]) [data-testid="cellInnerDiv"]:has([data-testid="UserCell"]),
+html[data-doomscroll="twitter"]:not([data-doomscroll-path*="follow"]):not([data-doomscroll-path^="/search"]) [data-testid="cellInnerDiv"]:has(h2):has(+ [data-testid="cellInnerDiv"] [data-testid="UserCell"]),
+html[data-doomscroll="twitter"]:not([data-doomscroll-path*="follow"]):not([data-doomscroll-path^="/search"]) [data-testid="cellInnerDiv"]:has(a[href^="/i/connect_people"]),
+
+/* Reddit: the home and popular feeds with their sidebar, and the top news masthead; a subreddit you
+   open and its posts stay */
+html[data-doomscroll="reddit"]:is([data-doomscroll-path="/"], [data-doomscroll-path^="/best"], [data-doomscroll-path^="/hot"], [data-doomscroll-path^="/new"], [data-doomscroll-path^="/top"], [data-doomscroll-path^="/rising"], [data-doomscroll-path^="/r/popular"], [data-doomscroll-path^="/r/all"]) :is(shreddit-feed, #right-sidebar-container),
+html[data-doomscroll="reddit"] .masthead,
+/* Reddit: beside a post, "People also ask", "More posts you may like" and the promotion slot; the
+   community's own information stays */
+html[data-doomscroll="reddit"] :is(#answers-suggested-queries-pdp, #right-rail-experience-root, aside:has(pdp-right-rail)),
+
+/* Instagram: the home feed below Stories, which mixes in posts from accounts you do not follow, and
+   the "Suggested for you" accounts; the link goes to the Following feed. That feed is also "/" but
+   has no Stories tray, so this leaves it alone */
+html[data-doomscroll="instagram"][data-doomscroll-path="/"] main div:has(> div [data-pagelet="story_tray"]) > div:has(article):not(:has([data-pagelet="story_tray"])),
+html[data-doomscroll="instagram"][data-doomscroll-path="/"] div:has(> div > a[href="/explore/people/"]) {
+    display: none !important;
+}
+
+/* The link or button in place of the feed, in the site's text colour so it suits its theme */
+#doomscroll-feed-link {
+    display: block;
+    margin: 16px;
+    padding: 12px 16px;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    border-radius: 8px;
+    color: inherit;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#doomscroll-feed-link span {
+    display: block;
+    opacity: 0.7;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+html[data-doomscroll="facebook"] #doomscroll-feed-link {
+    margin: 16px 0 0;
+    border: none;
+    border-radius: var(--card-corner-radius, 8px);
+    background: var(--card-background, #fff);
+    box-shadow: var(--card-box-shadow, 0 1px 2px rgba(0, 0, 0, 0.2));
+    color: var(--primary-text, #050505);
+}
+
+html[data-doomscroll="twitter"] #doomscroll-feed-link {
+    font-family: TwitterChirp, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html[data-doomscroll="linkedin"] #doomscroll-feed-link {
+    margin: 8px 0 0;
+}
+
+html[data-doomscroll="instagram"] #doomscroll-feed-link {
+    margin: 16px auto;
+    max-width: 470px;
+}
