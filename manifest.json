@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Doom Scroll",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "Mayank Singhal",
   "homepage_url": "https://doomscroll.web.app",
   "description": "Block distracting feeds and suggested content on social media platforms",
